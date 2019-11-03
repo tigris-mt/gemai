@@ -20,7 +20,9 @@ function gemai.context.new(def, data)
 
 	self:load(b.t.combine({
 		state = "init",
+		-- Time since last state change.
 		state_time = 0,
+		-- Time since context creation.
 		live_time = 0,
 		events = {},
 	}, data or {}))
@@ -43,6 +45,7 @@ end
 -- Run an AI step.
 -- <dtime> seconds have elapsed since the last step.
 function gemai.context:step(dtime)
+	-- Update timers.
 	self.data.live_time = self.data.live_time + dtime
 	self.data.state_time = self.data.state_time + dtime
 
@@ -52,6 +55,7 @@ function gemai.context:step(dtime)
 
 		self.data.state = self:state().events[event.name]
 		self.data.params = event.params
+		-- Reset time in state.
 		self.data.state_time = 0
 
 		if event.terminate then
@@ -59,6 +63,7 @@ function gemai.context:step(dtime)
 		end
 	end
 
+	-- Run all state actions.
 	for _,action in ipairs(self:state().actions) do
 		assert(gemai.actions[action], "gemai action does not exist: " .. action)(self)
 	end
