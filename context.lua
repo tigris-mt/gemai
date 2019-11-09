@@ -9,9 +9,9 @@ function gemai.context.new(def, data)
 		states = {},
 	}, table.copy(def))
 
-	for k,state in ipairs(self.def.states) do
-		state.events = table.combine(self.def.global_events, state.events or {})
-		state.actions = table.icombine(self.def.global_actions, state.actions or {})
+	for k,state in pairs(self.def.states) do
+		state.events = b.t.combine(self.def.global_events, state.events or {})
+		state.actions = b.t.icombine(self.def.global_actions, state.actions or {})
 	end
 
 	setmetatable(self, {
@@ -24,7 +24,10 @@ function gemai.context.new(def, data)
 		state_time = 0,
 		-- Time since context creation.
 		live_time = 0,
+		-- Event queue.
 		events = {},
+		-- Current event parameters.
+		params = {},
 	}, data or {}))
 
 	return self
@@ -38,6 +41,12 @@ function gemai.context:save(data)
 	return self.data
 end
 
+-- Human readable debug description.
+function gemai.context:debug_desc()
+	return "unknown"
+end
+
+-- Get the current state definition.
 function gemai.context:state()
 	return self.def.states[self.data.state]
 end
@@ -50,14 +59,18 @@ function gemai.context:step(dtime)
 	self.data.state_time = self.data.state_time + dtime
 
 	if #self.data.events > 0 then
+		-- Pop the next event.
 		local event = self.data.events[1]
 		table.remove(self.data.events, 1)
 
+		-- Update state from according to the event handler.
 		self.data.state = self:state().events[event.name]
+		-- Update current params.
 		self.data.params = event.params
 		-- Reset time in state.
 		self.data.state_time = 0
 
+		-- If this is a terminating event, clear the remaining queued events.
 		if event.terminate then
 			self.data.events = {}
 		end
@@ -65,7 +78,7 @@ function gemai.context:step(dtime)
 
 	-- Run all state actions.
 	for _,action in ipairs(self:state().actions) do
-		assert(gemai.actions[action], "gemai action does not exist: " .. action)(self)
+		self:assert(gemai.actions[action], "gemai action does not exist: " .. action)(self)
 	end
 end
 
@@ -77,6 +90,7 @@ function gemai.context:fire_event(event, params, options)
 		terminate = false,
 	}, options)
 
+	-- If this is a clearing event, clear the previous queued events.
 	if options.clear then
 		self.data.events = {}
 	end
@@ -86,4 +100,13 @@ function gemai.context:fire_event(event, params, options)
 		params = params or {},
 		terminate = options.terminate,
 	})
+end
+
+function gemai.context:assert(condition, message)
+	local message = (message and (message .. " ") or "") .. "[gemai: " .. self:debug_desc() .. "]"
+	if condition then
+		return condition
+	else
+		error(message, 2)
+	end
 end
