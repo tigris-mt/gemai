@@ -48,7 +48,7 @@ end
 
 -- Get the current state definition.
 function gemai.context:state()
-	return self.def.states[self.data.state]
+	return self:assert(self.def.states[self.data.state], "no such state: " .. tostring(self.data.state))
 end
 
 -- Run an AI step.
@@ -63,16 +63,19 @@ function gemai.context:step(dtime)
 		local event = self.data.events[1]
 		table.remove(self.data.events, 1)
 
-		-- Update state from according to the event handler.
-		self.data.state = self:state().events[event.name]
-		-- Update current params.
-		self.data.params = event.params
-		-- Reset time in state.
-		self.data.state_time = 0
+		-- Empty string means ignore.
+		if self:state().events[event.name] ~= "" then
+			-- Update state from according to the event handler.
+			self.data.state = self:assert(self:state().events[event.name], "state '" .. self.data.state .. "' does not have event '" .. event.name .. "'")
+			-- Update current params.
+			self.data.params = event.params
+			-- Reset time in state.
+			self.data.state_time = 0
 
-		-- If this is a terminating event, clear the remaining queued events.
-		if event.terminate then
-			self.data.events = {}
+			-- If this is a terminating event, clear the remaining queued events.
+			if event.terminate then
+				self.data.events = {}
+			end
 		end
 	end
 
@@ -87,7 +90,7 @@ function gemai.context:fire_event(event, params, options)
 		-- No events adding before this one will be fired.
 		clear = false,
 		-- No events added after this one will propagate.
-		terminate = false,
+		terminate = true,
 	}, options)
 
 	-- If this is a clearing event, clear the previous queued events.
@@ -103,7 +106,7 @@ function gemai.context:fire_event(event, params, options)
 end
 
 function gemai.context:assert(condition, message)
-	local message = (message and (message .. " ") or "") .. "[gemai: " .. self:debug_desc() .. "]"
+	local message = (message and (message .. " ") or "") .. "[gemai: " .. self:debug_desc() .. (" %s]"):format(self.data.state)
 	if condition then
 		return condition
 	else
