@@ -5,6 +5,8 @@ gemai = {}
 function gemai.ref_to_table(obj)
 	if obj:is_player() then
 		return {type = "player", id = obj:get_player_name()}
+	elseif obj:get_luaentity() and obj:get_luaentity()._aurum_mobs_id then
+		return {type = "aurum_mob", id = obj:get_luaentity()._aurum_mobs_id}
 	end
 end
 
