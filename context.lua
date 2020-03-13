@@ -24,6 +24,8 @@ function gemai.context.new(def, data)
 		state_time = 0,
 		-- Time since context creation.
 		live_time = 0,
+		-- Delta since last step.
+		step_time = 0,
 		-- Event queue.
 		events = {},
 		-- Current event parameters.
@@ -55,6 +57,7 @@ end
 -- <dtime> seconds have elapsed since the last step.
 function gemai.context:step(dtime)
 	-- Update timers.
+	self.data.step_time = dtime
 	self.data.live_time = self.data.live_time + dtime
 	self.data.state_time = self.data.state_time + dtime
 
