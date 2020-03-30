@@ -85,6 +85,10 @@ function gemai.context:step(dtime)
 	-- Run all state actions.
 	for _,action in ipairs(self:state().actions) do
 		self:assert(gemai.actions[action], "gemai action does not exist: " .. action)(self)
+		-- If the action inserted a breaking event, don't process any more actions.
+		if self.data.events[1] and self.data.events[#self.data.events].break_state then
+			break
+		end
 	end
 end
 
@@ -94,6 +98,8 @@ function gemai.context:fire_event(event, params, options)
 		clear = false,
 		-- No events added after this one will propagate.
 		terminate = true,
+		-- This event will stop action processing.
+		break_state = true,
 	}, options)
 
 	-- If this is a clearing event, clear the previous queued events.
@@ -105,6 +111,7 @@ function gemai.context:fire_event(event, params, options)
 		name = event,
 		params = params or {},
 		terminate = options.terminate,
+		break_state = options.break_state,
 	})
 end
 

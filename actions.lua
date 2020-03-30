@@ -5,5 +5,5 @@ function gemai.register_action(name, value)
 end
 
 gemai.register_action("gemai:always", function(self)
-	self:fire_event("gemai:always")
+	self:fire_event("always")
 end)
