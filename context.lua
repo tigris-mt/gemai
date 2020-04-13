@@ -61,7 +61,7 @@ function gemai.context:step(dtime)
 	self.data.live_time = self.data.live_time + dtime
 	self.data.state_time = self.data.state_time + dtime
 
-	if #self.data.events > 0 then
+	while #self.data.events > 0 do
 		-- Pop the next event.
 		local event = self.data.events[1]
 		table.remove(self.data.events, 1)
@@ -79,6 +79,9 @@ function gemai.context:step(dtime)
 			if event.terminate then
 				self.data.events = {}
 			end
+
+			-- Break on the first actionable event we find.
+			break
 		end
 	end
 
