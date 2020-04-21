@@ -50,6 +50,10 @@ function gemai.context:debug_desc()
 	return "unknown"
 end
 
+function gemai.context:is_valid()
+	return true
+end
+
 -- Get the current state definition.
 function gemai.context:state()
 	return self:assert(self.def.states[self.data.state], "no such state: " .. tostring(self.data.state))
@@ -89,6 +93,10 @@ function gemai.context:step(dtime)
 
 	-- Run all state actions.
 	for _,action in ipairs(self:state().actions) do
+		-- If the context is no longer valid, stop processing.
+		if not self:is_valid() then
+			break
+		end
 		self:assert(gemai.actions[action], "gemai action does not exist: " .. action)(self)
 		-- If the action inserted a breaking event, don't process any more actions.
 		if self.data.events[1] and self.data.events[#self.data.events].break_state then
