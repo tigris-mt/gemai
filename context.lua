@@ -99,7 +99,7 @@ function gemai.context:step(dtime)
 		end
 		self:assert(gemai.actions[action], "gemai action does not exist: " .. action)(self)
 		-- If the action inserted a breaking event, don't process any more actions.
-		if self.data.events[1] and self.data.events[#self.data.events].break_state then
+		if self.data.events[1] and self.data.events[#self.data.events].break_state and self:state().events[self.data.events[#self.data.events].name] ~= "" then
 			break
 		end
 	end
